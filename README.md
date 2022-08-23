@@ -32,15 +32,40 @@ Anyways back to States. Now inside a monad container, the state can be *implicit
 Okay I rambled a lot about the mathy portion of states as types that probably didn't make sense because I tried to simplify it. Anyways, let's look at the application and maybe even without the knowledge of how it works, you can appreciate its potential.
 
 The state of the game is captured through the sum type: 
-'''
+```
 data GameState : Type where
    NotRunning : GameState
    Running : (guesses : Nat) -> (word : Word) -> (lastGuess : Word) -> GameState
- '''
+ ```
 
 This, simply put, states that the game could either be running or not running. If it is running, then with the state, contains the information on how many guesses is left, the word to guess and the last guessed word. This is not the fancy monad thing I talked about earlier though. It is the basis of information about the state, similar to how records can contain various information about the state. The way states are handled is applied in the next type declaration:
 
+```
+data GameCmd : (ty : Type) -> GameState -> (ty -> GameState) -> Type where
+```
+This is the 'command': bind, sequence and pure is implemented for this type which makes it able to run for ```do```, the monadic powertool. Like how states should be managed, the first arguement is any type. This represents the return type fo an arguement. Simplistically, states are managed by being returned alongside the return type of a function. For example, with the tree labelling state, the function must also return the labelled tree along with the state, which without dependent types is made through a pair of types. However, with our command type, the information can be stored within the type.
 
+The second and third arguements show the magic. The first is a state, which is all good and well, however confusion might arrive over the second: a function? Yes, it takes is a function that takes the return type of the function (the first arguement) and returns a state. For simplicity sake, let's image right now that it is simply two states as the second and third arguements. These are the precondition and postcondition states. This essentially describes the way the states moves with different commands. Actually, let's forgo the word 'describe' because it in reality **demands** that the state be exactly as the precondition before the command is run, and will exactly be the postcondition after the command is run. 
+
+Let's look at the first command:
+```
+NewGame : (word : Word) -> GameCmd () NotRunning (const (Running 6 word NilWord))
+```
+When creating a new game, the state starts off as not running, then it becomes running. This means that new game cannot be called when the game state is already running. This isn't the extent of the power of this however.
+
+```
+Won : GameCmd () (Running guesses word word) (const NotRunning)
+Lost : GameCmd () (Running 0 word lastGuess) (const NotRunning)
+Guess : (guess : Word) -> GameCmd () (Running (S guesses) word lastGuess) (const (Running guesses word guess))
+```
+Here, I define when the game is won and when the game is lost. **As a type!** The type of winning is when the game state is ```Running guesses word word```. This basically means when the word that needs to be guessed is the same as the word that was last guessed. This is exactly the rule fo the game, but it is not typed imperitavely, but hard coded in the type signature of the function! The Lose constructor holds a similar effect. Losing can only happen when the amount of guesses reach zero. Only then can the game be lost. Another rule, and yet again hard coded into the type signature. 
+
+The postcondition type of the previous two constructors are NotRunning, because the game ends shortly after. Guess is the only action that changes the state from Running to Running. Here, we can see the rule of Guess in the type as well, where the only difference between the pre and post conditions are the guesses. Successor guesses becomes guesses, meaning the post condition has one less guess in it, and it also implies that the precondition has **more than one** guess. Beauty!
+
+This is how types can define states within a game, and how the type can therefore describe the rules of the game through its type signature, without even any code! This ensures that a game follows the rules, or else it won't type check. There is plenty more to talk about here, but I'll leave it at that. If this has sparked any interest in learning type driven programming or idris for that matter, I highly recoomend "Type Driven Development in Idris" by Edwin Brady.
+
+Cheers,
+Caleb
 
 
 
