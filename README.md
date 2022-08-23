@@ -3,9 +3,6 @@
 "Wordle in Idris" is a project to demonstrate the power of type constrained states for game logic. It is based on an example in chapter 14.3 of the book "Type Driven Development in Idris" by Edwin Brady. It follows the basic idea of the game wordle, as popularized by the New York Times, however with significantly fewer features. 
 
 Possible extensions coming in the future:
-- Randomized words
-- Infinite replayability
-- Check for valid words
 - Web application to run game
 
 
