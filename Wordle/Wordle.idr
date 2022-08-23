@@ -4,6 +4,7 @@ import Decidable.Equality
 import Data.String
 import System.File
 import System.File.ReadWrite
+import System.Random
 
 %default total
 
@@ -16,9 +17,6 @@ vectToList (x :: xs) = x :: vectToList xs
 Show Word where
    show NilWord = ""
    show (OKWord xs) = pack (vectToList xs)
-
-testWord : Word
-testWord = OKWord $ fromList $ map toLower ['h', 'e', 'l', 'l', 'o']
 
 inMakesOut : (xs = ys -> Void) -> OKWord xs = OKWord ys -> Void
 inMakesOut f Refl = f Refl
@@ -47,16 +45,19 @@ data GuessResult = Correct | Incorrect
 
 
 data GameCmd : (ty : Type) -> GameState -> (ty -> GameState) -> Type where
+   GetWordleWord : GameCmd Word NotRunning (const NotRunning)
    NewGame : (word : Word) -> GameCmd () NotRunning (const (Running 6 word NilWord))
 
    Won : GameCmd () (Running guesses word word) (const NotRunning)
    Lost : GameCmd () (Running 0 word lastGuess) (const NotRunning)
 
    Guess : (guess : Word) -> GameCmd () (Running (S guesses) word lastGuess) (const (Running guesses word guess))
-   
+
+   GetValidWords : GameCmd (List String) state (const state)
+
    ShowState : GameCmd () state (const state)
    Message : String -> GameCmd () state (const state)
-   ReadGuess : GameCmd Word state (const state)
+   ReadGuess : List String -> GameCmd Word state (const state)
 
    Pure : (res : ty) -> GameCmd ty (state_fn res) state_fn
    (>>=) : GameCmd a state1 state2_fn
@@ -80,12 +81,12 @@ namespace Loop
       Exit : GameLoop () NotRunning (const NotRunning)
 
 
-gameLoop : {guesses : _} -> {word : _} -> 
+gameLoop : {guesses : _} -> {word : _} -> (strList : List String) ->
                GameLoop () (Running (S guesses) word lastGuess) (const NotRunning)
-gameLoop {guesses} {word} = 
+gameLoop {guesses} {word} strList = 
    do ShowState
       Message "\nMake a guess to continue"
-      g <- ReadGuess
+      g <- ReadGuess strList
       Guess g
       case decEq word g of
          (Yes Refl) => do ShowState
@@ -97,7 +98,7 @@ gameLoop {guesses} {word} =
                                      Lost 
                                      ShowState
                                      Exit
-                             (S k) => gameLoop
+                             (S k) => gameLoop strList
 
 
 data HistoryVect : (invLength : Nat) -> (head : Word) -> (guessList : List Word) -> Type where
@@ -148,7 +149,7 @@ fillNil (S k) = "\n_ _ _ _ _          _ _ _ _ _ "
 
 
 Show (Game g) where
-   show GameStart = "Starting"
+   show GameStart = "Starting..."
    show (GameWon word) = "Congratulations, you won! The word was: " ++ show word
    show (GameLost word) = "Poopoo, you lost. The word was: " ++ show word
    show (InProgress word guesses guessList) = "\nWordle in Idris"
@@ -158,8 +159,12 @@ Show (Game g) where
 
 
 wordle : GameLoop () NotRunning (const NotRunning)
-wordle = do NewGame testWord
-            gameLoop
+wordle = do ShowState
+            word <- GetWordleWord
+            NewGame word
+            strList <- GetValidWords
+            gameLoop strList
+
 
 
 
@@ -180,22 +185,68 @@ listToWord (x :: y :: z :: w :: v :: xs) = case xs of
 
 listToWord _ = pure Nothing
 
+NilList : List String
+NilList = []
+
+
+removeEndLines : String -> String
+removeEndLines str = pack $ delete '\n' $ unpack str
+
+validateWord : (word : Word) -> (strList : List String) -> IO (Maybe Word)
+validateWord word strList = case elem (show word) strList of
+                                 False => pure Nothing
+                                 True => pure (Just word)
+
+
+checkNotEmpty : (list : List a) -> Maybe (NonEmpty list)
+checkNotEmpty [] = Nothing
+checkNotEmpty (x :: xs) = Just IsNonEmpty
+
+
+strToWord : String -> IO (Word)
+strToWord str = do Just word <- listToWord (unpack str) 
+                                 | Nothing => do putStrLn "Error: Possible Word not valid"
+                                                 pure NilWord
+                   pure word
+
+chooseWord : List String -> IO (Word)
+chooseWord strs = case checkNotEmpty strs of
+                       Nothing => do putStrLn "Error: Empty possible answers list"
+                                     pure NilWord
+                       (Just IsNonEmpty) => do x <- rndSelect strs
+                                               strToWord x
+                     
+
 
 runCmd : Fuel -> Game inState -> GameCmd ty inState outState_fn -> IO (GameResult ty outState_fn)
+runCmd fuel state GetWordleWord = do Right (isEnd, strList) <- readFilePage 5 fuel "wordle-answers-alphabetical.txt"
+                                                            | Left err => do putStrLn (show err)
+                                                                             ok NilWord state
+                                     let strListChopped = map removeEndLines strList
+                                     chosenWord <- chooseWord strListChopped
+                                     ok chosenWord state
 runCmd fuel state (NewGame word) = ok () (InProgress word _ NilHistory)
 runCmd fuel (InProgress word _ history) Won = ok () (GameWon word)
 runCmd fuel (InProgress word _ history) Lost = ok () (GameLost word)
 runCmd fuel (InProgress word _ history) (Guess guess) = ok () (InProgress word _ (AddHistory guess history))
+runCmd fuel state GetValidWords = do Right (isEnd, strList) <- readFilePage 5 fuel "valid-wordle-words.txt"
+                                                            | Left err => do putStrLn (show err)
+                                                                             ok NilList state
+                                     let strListChopped = map removeEndLines strList
+                                     ok strListChopped state
 runCmd fuel state ShowState = do printLn state
                                  ok () state
 runCmd fuel state (Message str) = do putStrLn str
                                      ok () state
-runCmd (More fuel) state ReadGuess = do input <- getLine
-                                        word <- listToWord (map toLower (unpack input))
-                                        case word of 
-                                           Nothing => do putStrLn "Not a valid input!"
-                                                         runCmd fuel state ReadGuess
-                                           Just okWord => ok okWord state
+runCmd (More fuel) state (ReadGuess strList) = do input <- getLine
+                                                  word <- listToWord (map toLower (unpack input))
+                                                  case word of 
+                                                     Nothing => do putStrLn "Not a valid input!"
+                                                                   runCmd fuel state (ReadGuess strList)
+                                                     Just okWord => do Just validWord <- validateWord okWord strList
+                                                                                          | Nothing => do putStrLn "Not a valid word!"
+                                                                                                          runCmd fuel state (ReadGuess strList)
+                                                                       ok validWord state       
 runCmd fuel state (Pure res) = ok res state
 runCmd fuel state (cmd >>= next) = do OK cmdRes newSt <- runCmd fuel state cmd
                                                 | OutOfFuel => pure OutOfFuel
@@ -218,7 +269,11 @@ run (More fuel) st (cmd >> next)
 partial
 main : IO ()
 main = do ignore $ run forever GameStart wordle
-
+          putStrLn "\nWould you like to play again? Enter \"y\" to continue, or any key to exit."
+          x <- getLine
+          if x == "y"
+            then main 
+            else pure ()
 
 
 
