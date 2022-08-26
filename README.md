@@ -24,7 +24,7 @@ Dependent types allow for the state to be defined as a monad. Now monads are a w
 
 Anyways back to States. Now inside a monad container, the state can be *implicitly* transferred between functions, automatically accessible through the new State type, and thus reduces the clutter. States are automatically updated because of each successive function in the procedural like coding that monads allow require the output of the previous one. The value is passed around automatically, and when changed, would impact the ones afterward.
 
-# States as Types in my Game
+## States as Types in my Game
 
 Okay, I rambled a lot about the mathy portion of states as types that probably didn't make sense because I tried to simplify it. Anyways, let's look at the application, and maybe even without the knowledge of how it works, you can appreciate its potential.
 
