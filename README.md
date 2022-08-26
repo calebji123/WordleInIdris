@@ -12,7 +12,7 @@ Download Idris2 https://www.idris-lang.org/pages/download.html.
 
 Add the Wordle folder into the idris2 folder. 
 
-run terminal command ```idris2 -p contrib Wordle/Wordle.idr``` in idris2 folder.
+Run terminal command ```idris2 -p contrib Wordle/Wordle.idr``` in idris2 folder.
 
 ## Why Idris
 
