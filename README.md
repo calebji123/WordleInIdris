@@ -6,6 +6,14 @@ Possible extensions coming in the future:
 - Web application to run game
 
 
+## How to run it
+
+Download Idris2 https://www.idris-lang.org/pages/download.html.
+
+Add the Wordle folder into the idris2 folder. 
+
+run terminal command ```idris2 -p contrib Wordle/Wordle.idr``` in idris2 folder.
+
 ## Why Idris
 
 Idris is a functional programming language, similar to Haskell. If you do not know what functional programming languages are, I highly recommend you check them out. Instead of explaining all the basics, I will assume some knowledge of functional programming languages. 
