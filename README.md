@@ -10,9 +10,7 @@ Possible extensions coming in the future:
 
 Download Idris2 https://www.idris-lang.org/pages/download.html.
 
-Add the Wordle folder into the idris2 folder. 
-
-Run terminal command ```idris2 -p contrib Wordle/Wordle.idr```.
+Run terminal command ```idris2 -p contrib Wordle.idr```.
 
 Run ```:exec main``` inside idris2 compiler.
 
