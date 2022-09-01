@@ -12,7 +12,10 @@
 		"vscode": {
 			"extensions": [
 				"zjhmale.Idris"
-			]
+			],
+            "settings": {
+                "idris.executablePath": "idris"
+            }
 		}
 	}
 
