@@ -2,6 +2,7 @@ import Data.Vect
 import Data.Vect.Elem
 import Decidable.Equality
 import Data.String
+import Data.List
 import System.File
 import System.File.ReadWrite
 import System.Random
