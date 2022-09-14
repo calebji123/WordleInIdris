@@ -8,15 +8,14 @@ Possible extensions coming in the future:
 
 ## How to run it
 
-Option A: Installing Idris
+Download (Idris) [https://www.idris-lang.org/pages/download.html] and clone the git repository
+   or 
+Use the (idris-2-docker) [https://github.com/joshuanianji/idris-2-docker#devcontainer-demo-wordle-in-idris] developed by @joshuanianji
 
-Download Idris2 https://www.idris-lang.org/pages/download.html
+Run:
+```idris2 -p contrib Wordle.idr```
 
-Option B: Run with Idris Devcontainer built by @joshuanji
-
-Run terminal command ```idris2 -p contrib Wordle.idr```.
-
-Run ```:exec main``` inside idris2 compiler.
+```:exec main```
 
 ## Why Idris
 
