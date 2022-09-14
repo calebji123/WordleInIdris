@@ -13,9 +13,12 @@ Download (Idris) [https://www.idris-lang.org/pages/download.html] and clone the 
 Use the (idris-2-docker) [https://github.com/joshuanianji/idris-2-docker#devcontainer-demo-wordle-in-idris] developed by @joshuanianji
 
 Run:
+
 ```idris2 -p contrib Wordle.idr```
 
 ```:exec main```
+
+
 
 ## Why Idris
 
