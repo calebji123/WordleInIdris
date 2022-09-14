@@ -8,8 +8,10 @@ Possible extensions coming in the future:
 
 ## How to run it
 
-Download (Idris) [https://www.idris-lang.org/pages/download.html] and clone the git repository
-   or 
+Download (Idris) [https://www.idris-lang.org/pages/download.html] and clone the git repository 
+
+or 
+
 Use the (idris-2-docker) [https://github.com/joshuanianji/idris-2-docker#devcontainer-demo-wordle-in-idris] developed by @joshuanianji
 
 Run:
