@@ -8,7 +8,11 @@ Possible extensions coming in the future:
 
 ## How to run it
 
-Download Idris2 https://www.idris-lang.org/pages/download.html.
+Option A: Installing Idris
+
+Download Idris2 https://www.idris-lang.org/pages/download.html
+
+Option B: Run with Idris Devcontainer built by @joshuanji
 
 Run terminal command ```idris2 -p contrib Wordle.idr```.
 
